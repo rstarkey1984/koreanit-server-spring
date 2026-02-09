@@ -22,15 +22,16 @@
 
 ## 2. 기술 스택
 
+* **Ubuntu 24.04 LTS (운영/배포 기준)**
 * Java 17+
 * Spring Boot
 * Spring Web (REST API)
 * Spring Security
 * JDBC / JdbcTemplate
 * MySQL
+* Gradle
 * (선택) Nginx – 리버스 프록시
 * (선택) Redis – 세션 스토어
-* Gradle
 
 ---
 
