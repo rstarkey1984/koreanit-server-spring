@@ -217,11 +217,3 @@ sudo systemctl restart koreanit-api
 ```bash
 sudo systemctl status koreanit-api
 ```
-
----
-
-## 8. Git / Release 관리
-
-* GitHub 저장소로 형상 관리
-* 완성 시점에 태그 기반 릴리즈 생성
-* Release에는 실행 가능한 JAR 첨부 가능
