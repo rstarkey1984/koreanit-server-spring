@@ -217,3 +217,10 @@ sudo systemctl restart koreanit-api
 ```bash
 sudo systemctl status koreanit-api
 ```
+
+---
+
+## Release
+
+- v1.0.0 (Initial Release)
+  https://github.com/username/koreanit-server-spring/releases/tag/v1.0.0
