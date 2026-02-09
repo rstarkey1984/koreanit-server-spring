@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Posts</title>
+</head>
+<body>
+  <h1>Posts</h1>
+
+  <div>
+    page=<span th:text="${page}"></span>,
+    limit=<span th:text="${limit}"></span>
+  </div>
+
+  <ul>
+    <li th:each="p : ${posts}">
+      <a th:href="@{/posts/{id}(id=${p.id})}" th:text="${p.title}"></a>
+      <span> (id=</span><span th:text="${p.id}"></span><span>)</span>
+    </li>
+  </ul>
+
+  <div th:if="${#lists.isEmpty(posts)}">
+    데이터 없음
+  </div>
+</body>
+</html>

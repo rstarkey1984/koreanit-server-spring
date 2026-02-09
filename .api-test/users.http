@@ -1,0 +1,56 @@
+@baseUrl = http://localhost:8080
+@json = application/json
+
+### 1) 회원가입
+POST {{baseUrl}}/api/users
+Content-Type: {{json}}
+
+{
+  "username": "admin",
+  "password": "1234",
+  "nickname": "관리자",
+  "email": "admin@admin.com"
+}
+# 설명: 신규 유저를 생성하고 응답으로 userId를 받는다.
+
+### 2) 로그인(세션 생성)
+POST {{baseUrl}}/api/login
+Content-Type: {{json}}
+
+{
+  "username": "admin",
+  "password": "1234"
+}
+
+### 3) 내 정보 조회(/api/me)
+GET {{baseUrl}}/api/me
+
+### 4) 사용자 목록(limit)
+GET {{baseUrl}}/api/users?limit=10
+
+### 5) 사용자 단건 조회
+GET {{baseUrl}}/api/users/10002
+
+### 6) 닉네임 변경
+PUT {{baseUrl}}/api/users/11/nickname
+Content-Type: {{json}}
+
+{
+  "nickname": "nickname"
+}
+# 설명: id=1 사용자의 nickname을 변경한다.
+
+### 7) 비밀번호 변경
+PUT {{baseUrl}}/api/users/10096/password
+Content-Type: {{json}}
+
+{
+  "password": "1234"
+}
+# 설명: id=1 사용자의 password를 BCrypt 해시로 변경 저장한다.
+
+### 8) 로그아웃(세션 삭제)
+POST {{baseUrl}}/api/logout
+
+### 9) 사용자삭제
+DELETE {{baseUrl}}/api/users/1

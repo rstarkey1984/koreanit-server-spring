@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>API Server</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+
+  <main class="w-full max-w-2xl px-6">
+    <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+
+      <div class="flex items-center gap-3 mb-6">
+        <div class="h-3 w-3 rounded-full bg-green-500"></div>
+        <h1 class="text-2xl font-semibold text-gray-900">
+          API Server is Running
+        </h1>
+      </div>
+
+      <p class="text-gray-600 mb-8">
+        Spring Boot 기반 API 서버가 정상적으로 실행 중입니다.
+      </p>
+
+      <div class="space-y-6">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-800 mb-2">Health Check</h2>
+          <div class="bg-gray-100 rounded-lg px-4 py-3 font-mono text-sm text-gray-800">
+            GET /health
+          </div>
+        </div>
+
+        <div>
+          <h2 class="text-sm font-semibold text-gray-800 mb-2">API Base Path</h2>
+          <div class="bg-gray-100 rounded-lg px-4 py-3 font-mono text-sm text-gray-800">
+            /api/**
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-10 pt-6 border-t border-gray-200 text-sm text-gray-500">
+        <p>
+          이 페이지는 <span class="font-mono">static/index.html</span>에서 제공되는
+          정적 리소스입니다.
+        </p>
+        <p class="mt-1">
+          실제 비즈니스 로직은 Controller / Service / Repository 계층에서 처리됩니다.
+        </p>
+      </div>
+
+    </section>
+
+    <footer class="text-center text-xs text-gray-400 mt-6">
+      Spring Boot API Server
+    </footer>
+  </main>
+
+</body>
+</html>

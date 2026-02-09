@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login</title>
+</head>
+
+<body>
+  <h1>로그인</h1>
+
+  <form th:action="@{/login}" method="post" th:object="${loginForm}">
+    <input type="hidden" name="redirect" th:value="${redirect}" />
+
+    <div>
+      <label>username</label>
+      <input type="text" th:field="*{username}" />
+      <div th:if="${#fields.hasErrors('username')}" th:text="${#fields.errors('username')[0]}"></div>
+    </div>
+
+    <div>
+      <label>password</label>
+      <input type="password" th:field="*{password}" />
+      <div th:if="${#fields.hasErrors('password')}" th:text="${#fields.errors('password')[0]}"></div>
+    </div>
+
+    <button type="submit">로그인</button>
+  </form>
+
+  <hr />
+  <a href="/signup">회원가입</a>
+</body>
+
+</html>

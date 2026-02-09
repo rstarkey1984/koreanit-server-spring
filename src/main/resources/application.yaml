@@ -1,0 +1,9 @@
+spring:
+  forward-headers-strategy: framework
+
+  profiles:
+    default: dev
+
+logging:
+  level:
+    root: INFO
