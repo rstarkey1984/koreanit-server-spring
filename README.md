@@ -55,19 +55,19 @@ spring/
 │  ├─ UserService.java         # 사용자 비즈니스 로직
 │  ├─ UserRepository.java      # 사용자 저장소 인터페이스
 │  ├─ JdbcUserRepository.java  # JDBC 기반 구현체
-│  └─ UserEntity / User / dto/ # Entity·Domain·DTO
+│  └─ UserEntity | User | dto/ # Entity·Domain·DTO
 ├─ post/                       # 게시글 도메인
 │  ├─ PostController.java      # 게시글 API
 │  ├─ PostService.java         # 게시글 비즈니스 로직
 │  ├─ PostRepository.java      # 게시글 저장소 인터페이스
 │  ├─ JdbcPostRepository.java  # JDBC 기반 구현체
-│  └─ PostEntity / Post / dto/ # Entity·Domain·DTO
+│  └─ PostEntity | Post | dto/ # Entity·Domain·DTO
 ├─ comment/                    # 댓글 도메인
 │  ├─ CommentController.java   # 댓글 API
 │  ├─ CommentService.java      # 댓글 비즈니스 로직
 │  ├─ CommentRepository.java   # 댓글 저장소 인터페이스
 │  ├─ JdbcCommentRepository.java # JDBC 기반 구현체
-│  └─ CommentEntity / Comment / dto/ # Entity·Domain·DTO
+│  └─ CommentEntity | Comment | dto/ # Entity·Domain·DTO
 sql/
 └─ schema.sql                  # DB 스키마 정의
 ```
