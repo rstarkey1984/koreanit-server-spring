@@ -39,37 +39,37 @@
 
 ```text
 spring/
-├─ Application.java
-├─ common/
-│  ├─ config/        # 공통 설정
-│  ├─ error/         # ErrorCode, ApiException
-│  ├─ logging/       # 요청 로깅 필터
-│  └─ response/      # ApiResponse 공통 응답
-├─ security/
-│  ├─ SecurityConfig.java
-│  ├─ SessionAuthenticationFilter.java
-│  ├─ LoginUser.java
-│  └─ AuthController.java
-├─ user/
-│  ├─ UserController.java
-│  ├─ UserService.java
-│  ├─ UserRepository.java
-│  ├─ JdbcUserRepository.java
-│  ├─ UserEntity / User / dto/
-├─ post/
-│  ├─ PostController.java
-│  ├─ PostService.java
-│  ├─ PostRepository.java
-│  ├─ JdbcPostRepository.java
-│  ├─ PostEntity / Post / dto/
-├─ comment/
-│  ├─ CommentController.java
-│  ├─ CommentService.java
-│  ├─ CommentRepository.java
-│  ├─ JdbcCommentRepository.java
-│  ├─ CommentEntity / Comment / dto/
+├─ Application.java            # Spring Boot 애플리케이션 시작점
+├─ common/                     # 전 도메인 공통 모듈
+│  ├─ config/                  # 전역 설정
+│  ├─ error/                   # 공통 에러 코드·예외
+│  ├─ logging/                 # 요청 로깅 필터
+│  └─ response/                # 공통 API 응답 포맷
+├─ security/                   # 인증·인가 및 보안 처리
+│  ├─ SecurityConfig.java      # Security 필터 체인 설정
+│  ├─ SessionAuthenticationFilter.java # 세션 인증 필터
+│  ├─ LoginUser.java           # 로그인 사용자 정보
+│  └─ AuthController.java      # 로그인·로그아웃 API
+├─ user/                       # 사용자 도메인
+│  ├─ UserController.java      # 사용자 API
+│  ├─ UserService.java         # 사용자 비즈니스 로직
+│  ├─ UserRepository.java      # 사용자 저장소 인터페이스
+│  ├─ JdbcUserRepository.java  # JDBC 기반 구현체
+│  └─ UserEntity / User / dto/ # Entity·Domain·DTO
+├─ post/                       # 게시글 도메인
+│  ├─ PostController.java      # 게시글 API
+│  ├─ PostService.java         # 게시글 비즈니스 로직
+│  ├─ PostRepository.java      # 게시글 저장소 인터페이스
+│  ├─ JdbcPostRepository.java  # JDBC 기반 구현체
+│  └─ PostEntity / Post / dto/ # Entity·Domain·DTO
+├─ comment/                    # 댓글 도메인
+│  ├─ CommentController.java   # 댓글 API
+│  ├─ CommentService.java      # 댓글 비즈니스 로직
+│  ├─ CommentRepository.java   # 댓글 저장소 인터페이스
+│  ├─ JdbcCommentRepository.java # JDBC 기반 구현체
+│  └─ CommentEntity / Comment / dto/ # Entity·Domain·DTO
 sql/
-└─ schema.sql        # DB 스키마 정의
+└─ schema.sql                  # DB 스키마 정의
 ```
 
 ---
