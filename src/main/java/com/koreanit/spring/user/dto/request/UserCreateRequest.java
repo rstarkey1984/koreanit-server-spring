@@ -9,7 +9,7 @@ public class UserCreateRequest {
 
   @NotBlank(message = "username은 필수입니다")
   @Size(min = 4, max = 20, message = "username은 4~20자여야 합니다")
-  @Pattern(regexp = "^[A-Za-z]+$", message = "username은 영문자만 사용할 수 있습니다")
+  @Pattern(regexp = "^[A-Za-z0-9]+$", message = "username은 영문자와 숫자만 사용할 수 있습니다")
   private String username;
 
   @NotBlank(message = "password는 필수입니다")

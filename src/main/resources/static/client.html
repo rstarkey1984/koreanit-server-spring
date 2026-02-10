@@ -518,107 +518,90 @@
   </div>
 
   <script>
-    const { createApp } = Vue;
+    const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
 
     createApp({
-      data() {
-        return {
-          apiBase: 'http://localhost:8080',
+      setup() {
+        // ---------------------------
+        // state
+        // ---------------------------
+        const apiBase = ref('http://localhost:8080');
 
-          toasts: [],
-          toastSeq: 1,
+        const toasts = ref([]);
+        const toastSeq = ref(1);
 
-          me: null,
+        const me = ref(null);
 
-          loginForm: { username: '', password: '' },
-          signupForm: { username: '', password: '', nickname: '', email: '' },
+        const loginForm = reactive({ username: '', password: '' });
+        const signupForm = reactive({ username: '', password: '', nickname: '', email: '' });
 
-          users: [],
+        const users = ref([]);
 
-          postQuery: { page: 1, limit: 10 },
-          posts: [],
-          selectedPostId: null,
-          postDetail: null,
+        const postQuery = reactive({ page: 1, limit: 10 });
+        const posts = ref([]);
+        const selectedPostId = ref(null);
+        const postDetail = ref(null);
 
-          editor: { mode: 'create', id: null, title: '', content: '' },
-          showPostForm: false,
-          showCommentForm: false,
+        const editor = reactive({ mode: 'create', id: null, title: '', content: '' });
+        const showPostForm = ref(false);
+        const showCommentForm = ref(false);
 
-          commentsQuery: { limit: 10 },
-          commentForm: { content: '' },
-          comments: {
-            items: [],
-            loading: false,
-            hasMore: true,
-            before: null,
-          },
-        };
-      },
+        const commentsQuery = reactive({ limit: 10 });
+        const commentForm = reactive({ content: '' });
+        const comments = reactive({
+          items: [],
+          loading: false,
+          hasMore: true,
+          before: null,
+        });
 
-      computed: {
-        canLogin() {
-          return this.loginForm.username.length > 0 && this.loginForm.password.length > 0;
-        },
-        canSignup() {
-          return this.signupForm.username.length > 0
-            && this.signupForm.password.length > 0
-            && this.signupForm.nickname.length > 0;
-        },
-        canSubmitPost() {
-          const ok = this.editor.title.trim().length > 0 && this.editor.content.trim().length > 0;
+        // ---------------------------
+        // computed
+        // ---------------------------
+        const canLogin = computed(() => loginForm.username.length > 0 && loginForm.password.length > 0);
+
+        const canSignup = computed(() =>
+          signupForm.username.length > 0 &&
+          signupForm.password.length > 0 &&
+          signupForm.nickname.length > 0
+        );
+
+        const canSubmitPost = computed(() => {
+          const ok = editor.title.trim().length > 0 && editor.content.trim().length > 0;
           if (!ok) return false;
-          if (this.editor.mode === 'edit') return !!this.editor.id;
+          if (editor.mode === 'edit') return !!editor.id;
           return true;
-        },
-        canCreateComment() {
-          return !!this.postDetail && this.commentForm.content.trim().length > 0;
-        }
-      },
+        });
 
-      watch: {
-        'postQuery.page'(n) {
-          if (!Number.isFinite(n) || n <= 0) this.postQuery.page = 1;
-          this.loadPosts();
-        },
-        'postQuery.limit'(n) {
-          if (!Number.isFinite(n) || n <= 0) this.postQuery.limit = 10;
-          if (n > 1000) this.postQuery.limit = 1000;
-          this.postQuery.page = 1;
-          this.loadPosts();
-        },
-        'commentsQuery.limit'(n) {
-          if (!Number.isFinite(n) || n <= 0) this.commentsQuery.limit = 10;
-          if (n > 1000) this.commentsQuery.limit = 1000;
+        const canCreateComment = computed(() => !!postDetail.value && commentForm.content.trim().length > 0);
 
-          if (this.postDetail) this.reloadComments();
-        },
-      },
-
-      methods: {
-        pushToast(type, text) {
-          const id = this.toastSeq++;
-          this.toasts.unshift({ id, type, text });
-          if (this.toasts.length > 3) this.toasts.splice(3);
+        // ---------------------------
+        // helpers
+        // ---------------------------
+        function pushToast(type, text) {
+          const id = toastSeq.value++;
+          toasts.value.unshift({ id, type, text });
+          if (toasts.value.length > 3) toasts.value.splice(3);
 
           const ms = (type === 'error') ? 6500 : 3500;
-          window.setTimeout(() => this.removeToast(id), ms);
-        },
+          window.setTimeout(() => removeToast(id), ms);
+        }
 
-        removeToast(id) {
-          const idx = this.toasts.findIndex(t => t.id === id);
-          if (idx >= 0) this.toasts.splice(idx, 1);
-        },
+        function removeToast(id) {
+          const idx = toasts.value.findIndex(t => t.id === id);
+          if (idx >= 0) toasts.value.splice(idx, 1);
+        }
 
-        async request(config) {
+        async function request(config) {
           const silent = config.silent === true;
 
-          if (!this.apiBase) {
-            if (!silent) this.pushToast('error', 'API 주소를 입력하세요.');
+          if (!apiBase.value) {
+            if (!silent) pushToast('error', 'API 주소를 입력하세요.');
             throw new Error('API base missing');
           }
 
           axios.defaults.withCredentials = true;
-          const url = this.apiBase.replace(/\/+$/, '') + config.url;
+          const url = apiBase.value.replace(/\/+$/, '') + config.url;
 
           try {
             const res = await axios({
@@ -635,7 +618,7 @@
               if (!silent) {
                 const msg = body.message ?? '요청 실패';
                 const code = body.code ?? '';
-                this.pushToast('error', code ? `${msg}\ncode=${code}` : msg);
+                pushToast('error', code ? `${msg}\ncode=${code}` : msg);
               }
               throw new Error('ApiResponse fail');
             }
@@ -644,330 +627,402 @@
           } catch (e) {
             if (!silent) {
               if (!e.response) {
-                this.pushToast('error', e?.message || '네트워크 오류');
+                pushToast('error', e?.message || '네트워크 오류');
               } else {
                 const data = e.response?.data;
                 if (data?.success === false) {
                   const msg = data.message ?? '요청 실패';
                   const code = data.code ?? '';
-                  this.pushToast('error', code ? `${msg}\ncode=${code}` : msg);
+                  pushToast('error', code ? `${msg}\ncode=${code}` : msg);
                 } else {
-                  this.pushToast('error', `HTTP ${e.response.status} 오류`);
+                  pushToast('error', `HTTP ${e.response.status} 오류`);
                 }
               }
             }
             throw e;
           }
-        },
+        }
 
-        async pingMe({ silent = false } = {}) {
+        function formatDate(v) {
+          if (!v) return '';
+          return v.replace('T', ' ');
+        }
+
+        function syncPostRowFromDetail() {
+          if (!postDetail.value) return;
+          const idx = posts.value.findIndex(p => p.id === postDetail.value.id);
+          if (idx < 0) return;
+
+          posts.value[idx] = {
+            ...posts.value[idx],
+            commentsCnt: postDetail.value.commentsCnt,
+            viewCount: postDetail.value.viewCount,
+            title: postDetail.value.title,
+            userId: postDetail.value.userId,
+          };
+        }
+
+        // ---------------------------
+        // api methods
+        // ---------------------------
+        async function pingMe({ silent = false } = {}) {
           try {
-            const body = await this.request({
+            const body = await request({
               url: '/api/me',
               method: 'GET',
-              silent,   // ← 전달
+              silent,
             });
-            this.me = body.data || null;
+            me.value = body.data || null;
 
             if (!silent) {
-              this.pushToast('ok', this.me ? '세션 확인: 로그인됨' : '세션 확인: 비로그인');
+              pushToast('ok', me.value ? '세션 확인: 로그인됨' : '세션 확인: 비로그인');
             }
           } catch (_) {
-            if (!silent) {
-              this.pushToast('error', '세션 확인 실패');
-            }
+            if (!silent) pushToast('error', '세션 확인 실패');
           }
-        },
+        }
 
-
-        async login() {
+        async function login() {
           try {
-            const body = await this.request({
+            const body = await request({
               url: '/api/login',
               method: 'POST',
               data: {
-                username: this.loginForm.username,
-                password: this.loginForm.password,
+                username: loginForm.username,
+                password: loginForm.password,
               }
             });
 
             const data = body?.data;
-            this.pushToast('ok', (typeof data === 'number') ? `로그인 성공 (userId=${data})` : '로그인 성공');
+            pushToast('ok', (typeof data === 'number') ? `로그인 성공 (userId=${data})` : '로그인 성공');
 
-            this.loginForm.username = '';
-            this.loginForm.password = '';
+            loginForm.username = '';
+            loginForm.password = '';
 
-            await this.pingMe();
+            await pingMe();
           } catch (_) { }
-        },
+        }
 
-        async logout() {
+        async function logout() {
           try {
-            await this.request({ url: '/api/logout', method: 'POST' });
-            this.me = null;
-            this.loginForm.username = '';
-            this.loginForm.password = '';
-            this.pushToast('ok', '로그아웃 완료');
+            await request({ url: '/api/logout', method: 'POST' });
+            me.value = null;
+            loginForm.username = '';
+            loginForm.password = '';
+            pushToast('ok', '로그아웃 완료');
           } catch (_) { }
-        },
+        }
 
-        async signup() {
+        async function signup() {
           try {
             const payload = {
-              username: this.signupForm.username,
-              password: this.signupForm.password,
-              nickname: this.signupForm.nickname,
+              username: signupForm.username,
+              password: signupForm.password,
+              nickname: signupForm.nickname,
             };
-            if (this.signupForm.email && this.signupForm.email.trim().length > 0) {
-              payload.email = this.signupForm.email.trim();
+            if (signupForm.email && signupForm.email.trim().length > 0) {
+              payload.email = signupForm.email.trim();
             }
 
-            const body = await this.request({
+            const body = await request({
               url: '/api/users',
               method: 'POST',
               data: payload
             });
 
             const userId = body?.data;
-            this.pushToast('ok', `회원가입 성공 (userId=${userId})`);
+            pushToast('ok', `회원가입 성공 (userId=${userId})`);
 
-            // 추가: 입력창 초기화
-            this.signupForm.username = '';
-            this.signupForm.password = '';
-            this.signupForm.nickname = '';
-            this.signupForm.email = '';
+            signupForm.username = '';
+            signupForm.password = '';
+            signupForm.nickname = '';
+            signupForm.email = '';
           } catch (_) { }
-        },
+        }
 
-        async loadUsers() {
+        async function loadUsers() {
           try {
-            const body = await this.request({
+            const body = await request({
               url: '/api/users',
               method: 'GET',
               params: { limit: 1000 }
             });
-            this.users = body.data || [];
-            this.pushToast('ok', `Users ${this.users.length}건`);
+            users.value = body.data || [];
+            pushToast('ok', `Users ${users.value.length}건`);
           } catch (_) { }
-        },
+        }
 
-        async loadPosts({ silent = false } = {}) {
+        async function loadPosts({ silent = false } = {}) {
           try {
-            const body = await this.request({
+            const body = await request({
               url: '/api/posts',
               method: 'GET',
               params: {
-                page: this.postQuery.page,
-                limit: this.postQuery.limit,
+                page: postQuery.page,
+                limit: postQuery.limit,
               },
-              silent, // 추가
+              silent,
             });
-            this.posts = body.data || [];
-            if (!silent) this.pushToast('ok', `Posts ${this.posts.length}건`);
+            posts.value = body.data || [];
+            if (!silent) pushToast('ok', `Posts ${posts.value.length}건`);
           } catch (_) { }
-        },
+        }
 
-        formatDate(v) {
-          if (!v) return '';
-          // 2026-02-09T01:23:45 -> 2026-02-09 01:23:45
-          return v.replace('T', ' ');
-        },
+        async function selectPost(id) {
+          selectedPostId.value = id;
+          showPostForm.value = false;
+          showCommentForm.value = false;
 
+          await loadPostDetail();
+          await reloadComments();
+        }
 
-        async selectPost(id) {
-          this.selectedPostId = id;
-          this.showPostForm = false;
-          this.showCommentForm = false;
-
-          await this.loadPostDetail();
-          await this.reloadComments();
-        },
-
-        async loadPostDetail() {
-          if (!this.selectedPostId) return;
+        async function loadPostDetail() {
+          if (!selectedPostId.value) return;
           try {
-            const body = await this.request({
-              url: `/api/posts/${this.selectedPostId}`,
+            const body = await request({
+              url: `/api/posts/${selectedPostId.value}`,
               method: 'GET'
             });
-            this.postDetail = body.data || null;
-            if (this.postDetail) this.pushToast('ok', `상세 로드: postId=${this.postDetail.id}`);
+            postDetail.value = body.data || null;
+            if (postDetail.value) pushToast('ok', `상세 로드: postId=${postDetail.value.id}`);
 
-            // 상세 조회로 증가한 viewCount를 목록에도 반영
-            this.syncPostRowFromDetail();
+            syncPostRowFromDetail();
           } catch (_) { }
-        },
+        }
 
-        openCreatePost() {
-          this.editor.mode = 'create';
-          this.editor.id = null;
-          this.editor.title = '';
-          this.editor.content = '';
-          this.showPostForm = true;
-          this.pushToast('ok', '글쓰기 모드');
-        },
+        function openCreatePost() {
+          editor.mode = 'create';
+          editor.id = null;
+          editor.title = '';
+          editor.content = '';
+          showPostForm.value = true;
+          pushToast('ok', '글쓰기 모드');
+        }
 
-        openEditPost() {
-          if (!this.postDetail) return;
-          this.editor.mode = 'edit';
-          this.editor.id = this.postDetail.id;
-          this.editor.title = this.postDetail.title || '';
-          this.editor.content = this.postDetail.content || '';
-          this.showPostForm = true;
-          this.pushToast('ok', `수정 모드: postId=${this.editor.id}`);
-        },
+        function openEditPost() {
+          if (!postDetail.value) return;
+          editor.mode = 'edit';
+          editor.id = postDetail.value.id;
+          editor.title = postDetail.value.title || '';
+          editor.content = postDetail.value.content || '';
+          showPostForm.value = true;
+          pushToast('ok', `수정 모드: postId=${editor.id}`);
+        }
 
-        resetEditor() {
-          if (this.editor.mode === 'edit' && this.postDetail) {
-            this.openEditPost();
+        function resetEditor() {
+          if (editor.mode === 'edit' && postDetail.value) {
+            openEditPost();
             return;
           }
-          this.openCreatePost();
-        },
+          openCreatePost();
+        }
 
-        async submitPost() {
+        async function submitPost() {
           try {
-            if (this.editor.mode === 'create') {
-              const body = await this.request({
+            if (editor.mode === 'create') {
+              const body = await request({
                 url: '/api/posts',
                 method: 'POST',
-                data: { title: this.editor.title, content: this.editor.content }
+                data: { title: editor.title, content: editor.content }
               });
               const created = body.data;
-              this.showPostForm = false;
-              this.pushToast('ok', `작성 완료 (postId=${created?.id ?? '?'})`);
-              await this.loadPosts();
-              if (created?.id) await this.selectPost(created.id);
+              showPostForm.value = false;
+              pushToast('ok', `작성 완료 (postId=${created?.id ?? '?'})`);
+              await loadPosts();
+              if (created?.id) await selectPost(created.id);
             } else {
-              const body = await this.request({
-                url: `/api/posts/${this.editor.id}`,
+              const body = await request({
+                url: `/api/posts/${editor.id}`,
                 method: 'PUT',
-                data: { title: this.editor.title, content: this.editor.content }
+                data: { title: editor.title, content: editor.content }
               });
               const updated = body.data;
-              this.showPostForm = false;
-              this.pushToast('ok', `수정 완료 (postId=${updated?.id ?? this.editor.id})`);
-              await this.loadPosts();
-              await this.selectPost(this.editor.id);
+              showPostForm.value = false;
+              pushToast('ok', `수정 완료 (postId=${updated?.id ?? editor.id})`);
+              await loadPosts();
+              await selectPost(editor.id);
             }
           } catch (_) { }
-        },
+        }
 
-        async deletePost() {
-          if (!this.postDetail) return;
-          const id = this.postDetail.id;
+        async function deletePost() {
+          if (!postDetail.value) return;
+          const id = postDetail.value.id;
           const ok = window.confirm(`게시글 삭제? id=${id}`);
           if (!ok) return;
 
           try {
-            await this.request({ url: `/api/posts/${id}`, method: 'DELETE' });
-            this.pushToast('ok', `삭제 완료 (postId=${id})`);
+            await request({ url: `/api/posts/${id}`, method: 'DELETE' });
+            pushToast('ok', `삭제 완료 (postId=${id})`);
 
-            this.postDetail = null;
-            this.selectedPostId = null;
+            postDetail.value = null;
+            selectedPostId.value = null;
 
-            this.comments.items = [];
-            this.comments.before = null;
-            this.comments.hasMore = true;
+            comments.items = [];
+            comments.before = null;
+            comments.hasMore = true;
 
-            this.showCommentForm = false;
-            this.showPostForm = false;
+            showCommentForm.value = false;
+            showPostForm.value = false;
 
-            await this.loadPosts();
+            await loadPosts();
           } catch (_) { }
-        },
+        }
 
-        async reloadComments() {
-          if (!this.postDetail) return;
-          this.comments.items = [];
-          this.comments.before = null;
-          this.comments.hasMore = true;
-          await this.loadMoreComments(true);
-        },
+        async function reloadComments() {
+          if (!postDetail.value) return;
+          comments.items = [];
+          comments.before = null;
+          comments.hasMore = true;
+          await loadMoreComments(true);
+        }
 
-        async loadMoreComments(reset = false) {
-          if (!this.postDetail) return;
-          if (this.comments.loading) return;
-          if (!this.comments.hasMore && !reset) return;
+        async function loadMoreComments(reset = false) {
+          if (!postDetail.value) return;
+          if (comments.loading) return;
+          if (!comments.hasMore && !reset) return;
 
-          this.comments.loading = true;
+          comments.loading = true;
           try {
-            const params = { limit: this.commentsQuery.limit };
-            if (!reset && this.comments.before) params.before = this.comments.before;
+            const params = { limit: commentsQuery.limit };
+            if (!reset && comments.before) params.before = comments.before;
 
-            const body = await this.request({
-              url: `/api/posts/${this.postDetail.id}/comments`,
+            const body = await request({
+              url: `/api/posts/${postDetail.value.id}/comments`,
               method: 'GET',
               params
             });
 
             const list = body.data || [];
-            this.comments.items = reset ? list : this.comments.items.concat(list);
+            comments.items = reset ? list : comments.items.concat(list);
 
-            if (this.comments.items.length > 0) {
-              const last = this.comments.items[this.comments.items.length - 1];
-              this.comments.before = last.id;
+            if (comments.items.length > 0) {
+              const last = comments.items[comments.items.length - 1];
+              comments.before = last.id;
             }
 
-            this.comments.hasMore = list.length === this.commentsQuery.limit;
-            this.pushToast('ok', reset ? `댓글 로드 ${list.length}건` : `댓글 추가 ${list.length}건`);
+            comments.hasMore = list.length === commentsQuery.limit;
+            pushToast('ok', reset ? `댓글 로드 ${list.length}건` : `댓글 추가 ${list.length}건`);
           } catch (_) {
           } finally {
-            this.comments.loading = false;
+            comments.loading = false;
           }
-        },
+        }
 
-        async createComment() {
-          if (!this.postDetail) return;
+        async function createComment() {
+          if (!postDetail.value) return;
           try {
-            const body = await this.request({
-              url: `/api/posts/${this.postDetail.id}/comments`,
+            const body = await request({
+              url: `/api/posts/${postDetail.value.id}/comments`,
               method: 'POST',
-              data: { content: this.commentForm.content }
+              data: { content: commentForm.content }
             });
             const created = body.data;
-            this.pushToast('ok', `댓글 작성 완료 (id=${created?.id ?? '?'})`);
-            this.commentForm.content = '';
-            this.showCommentForm = false;
-            await this.reloadComments();
-            await this.loadPostDetail();
-            this.syncPostRowFromDetail();
+            pushToast('ok', `댓글 작성 완료 (id=${created?.id ?? '?'})`);
+            commentForm.content = '';
+            showCommentForm.value = false;
+            await reloadComments();
+            await loadPostDetail();
+            syncPostRowFromDetail();
           } catch (_) { }
-        },
+        }
 
-        async deleteComment(id) {
+        async function deleteComment(id) {
           const ok = window.confirm(`댓글 삭제? id=${id}`);
           if (!ok) return;
 
           try {
-            await this.request({ url: `/api/comments/${id}`, method: 'DELETE' });
-            this.pushToast('ok', `댓글 삭제 완료 (id=${id})`);
-            await this.reloadComments();
-            await this.loadPostDetail();
-            this.syncPostRowFromDetail();
+            await request({ url: `/api/comments/${id}`, method: 'DELETE' });
+            pushToast('ok', `댓글 삭제 완료 (id=${id})`);
+            await reloadComments();
+            await loadPostDetail();
+            syncPostRowFromDetail();
           } catch (_) { }
-        },
+        }
 
-        syncPostRowFromDetail() {
-          if (!this.postDetail) return;
-          const idx = this.posts.findIndex(p => p.id === this.postDetail.id);
-          if (idx < 0) return;
+        // ---------------------------
+        // watchers (Composition)
+        // ---------------------------
+        watch(() => postQuery.page, (n) => {
+          if (!Number.isFinite(n) || n <= 0) postQuery.page = 1;
+          loadPosts();
+        });
 
-          this.posts[idx] = {
-            ...this.posts[idx],
-            commentsCnt: this.postDetail.commentsCnt,
-            viewCount: this.postDetail.viewCount,
-            title: this.postDetail.title,
-            userId: this.postDetail.userId,
-          };
-        },
-      },
+        watch(() => postQuery.limit, (n) => {
+          if (!Number.isFinite(n) || n <= 0) postQuery.limit = 10;
+          if (n > 1000) postQuery.limit = 1000;
+          postQuery.page = 1;
+          loadPosts();
+        });
 
-      async mounted() {
-        try { await this.pingMe({ silent: true }); } catch (_) { }
-        try { await this.loadPosts({ silent: true }); } catch (_) { }
+        watch(() => commentsQuery.limit, (n) => {
+          if (!Number.isFinite(n) || n <= 0) commentsQuery.limit = 10;
+          if (n > 1000) commentsQuery.limit = 1000;
+
+          if (postDetail.value) reloadComments();
+        });
+
+        // ---------------------------
+        // lifecycle
+        // ---------------------------
+        onMounted(async () => {
+          try { await pingMe({ silent: true }); } catch (_) { }
+          try { await loadPosts({ silent: true }); } catch (_) { }
+        });
+
+        // expose to template
+        return {
+          apiBase,
+          toasts,
+          removeToast,
+
+          me,
+          loginForm,
+          signupForm,
+          users,
+
+          postQuery,
+          posts,
+          selectedPostId,
+          postDetail,
+
+          editor,
+          showPostForm,
+          showCommentForm,
+
+          commentsQuery,
+          commentForm,
+          comments,
+
+          canLogin,
+          canSignup,
+          canSubmitPost,
+          canCreateComment,
+
+          pingMe,
+          login,
+          logout,
+          signup,
+          loadUsers,
+          loadPosts,
+          selectPost,
+          loadPostDetail,
+          openCreatePost,
+          openEditPost,
+          resetEditor,
+          submitPost,
+          deletePost,
+          reloadComments,
+          loadMoreComments,
+          createComment,
+          deleteComment,
+
+          formatDate,
+          syncPostRowFromDetail,
+          pushToast,
+        };
       }
-
     }).mount('#app');
   </script>
 </body>
